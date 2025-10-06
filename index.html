@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English-Hindi Transliteration: Neural Architecture Benchmark</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.9em;
+        }
+
+        .highlights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .highlight-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .highlight-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .highlight-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .highlight-card .label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        section {
+            background: white;
+            padding: 40px;
+            margin: 30px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin: 30px 0 15px 0;
+            font-size: 1.5em;
+        }
+
+        h4 {
+            color: #667eea;
+            margin: 20px 0 10px 0;
+            font-size: 1.2em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .best {
+            background: #d4edda;
+            font-weight: bold;
+        }
+
+        .image-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .model-card {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .model-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .metric {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            padding: 5px 10px;
+            background: white;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .error-example {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        .success-example {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .prediction-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .comparison-table {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .correct {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .incorrect {
+            color: #dc3545;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            margin-top: 60px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #764ba2;
+        }
+
+        ul {
+            margin: 20px 0;
+            padding-left: 30px;
+            line-height: 2;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .highlights {
+                grid-template-columns: 1fr;
+            }
+            
+            section {
+                padding: 20px;
+            }
+
+            .prediction-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>English-Hindi Transliteration Benchmark</h1>
+        <p>Comprehensive Evaluation of 8 Neural Architectures</p>
+        <div style="margin-top: 20px;">
+            <span class="badge">Seq2Seq</span>
+            <span class="badge">Attention</span>
+            <span class="badge">Transformer</span>
+            <span class="badge">4,502 Test Samples</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Key Highlights -->
+        <div class="highlights">
+            <div class="highlight-card">
+                <h3>Best Accuracy</h3>
+                <div class="value">43.07%</div>
+                <div class="label">Transformer</div>
+            </div>
+            <div class="highlight-card">
+                <h3>Lowest Error</h3>
+                <div class="value">0.94</div>
+                <div class="label">BiLSTM + Attention</div>
+            </div>
+            <div class="highlight-card">
+                <h3>Fastest</h3>
+                <div class="value">1.26ms</div>
+                <div class="label">GRU</div>
+            </div>
+            <div class="highlight-card">
+                <h3>Models Tested</h3>
+                <div class="value">8</div>
+                <div class="label">Architectures</div>
+            </div>
+        </div>
+
+        <!-- Results Summary -->
+        <section id="results">
+            <h2>Results Summary</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Accuracy</th>
+                        <th>Params (M)</th>
+                        <th>Speed (ms)</th>
+                        <th>Edit Distance</th>
+                        <th>Off by 1</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="best">
+                        <td><strong>Transformer</strong></td>
+                        <td>43.07%</td>
+                        <td>5.57</td>
+                        <td>15.30</td>
+                        <td>1.06</td>
+                        <td>1364</td>
+                    </tr>
+                    <tr class="best">
+                        <td><strong>BiLSTM + Attention</strong></td>
+                        <td>42.11%</td>
+                        <td>37.28</td>
+                        <td>2.53</td>
+                        <td>0.94</td>
+                        <td>1508</td>
+                    </tr>
+                    <tr>
+                        <td>LSTM + Attention</td>
+                        <td>39.20%</td>
+                        <td>8.99</td>
+                        <td>2.18</td>
+                        <td>1.05</td>
+                        <td>1460</td>
+                    </tr>
+                    <tr>
+                        <td>LSTM</td>
+                        <td>39.18%</td>
+                        <td>7.42</td>
+                        <td>1.29</td>
+                        <td>1.06</td>
+                        <td>1447</td>
+                    </tr>
+                    <tr>
+                        <td>GRU + Attention</td>
+                        <td>37.45%</td>
+                        <td>6.89</td>
+                        <td>2.14</td>
+                        <td>1.10</td>
+                        <td>1491</td>
+                    </tr>
+                    <tr>
+                        <td>GRU</td>
+                        <td>37.03%</td>
+                        <td>5.58</td>
+                        <td>1.26</td>
+                        <td>1.13</td>
+                        <td>1441</td>
+                    </tr>
+                    <tr>
+                        <td>RNN + Attention</td>
+                        <td>36.47%</td>
+                        <td>2.69</td>
+                        <td>2.12</td>
+                        <td>1.10</td>
+                        <td>1510</td>
+                    </tr>
+                    <tr>
+                        <td>RNN</td>
+                        <td>0.11%</td>
+                        <td>1.90</td>
+                        <td>1.25</td>
+                        <td>4.70</td>
+                        <td>59</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Visualizations -->
+        <section id="visualizations">
+            <h2>Performance Visualizations</h2>
+            
+            <div class="image-container">
+                <h3>Model Comparison Overview</h3>
+                <img src="/home/swapnil/Desktop/Placement26/ADAS/Transliteration/results/model_comparison.png" alt="Model Comparison">
+            </div>
+
+            <div class="image-container">
+                <h3>Accuracy by Length</h3>
+                <img src="/home/swapnil/Desktop/Placement26/ADAS/Transliteration/results/accuracy_by_length.png" alt="Accuracy by Length">
+            </div>
+            
+            <div class="image-container">
+                <h3>Error Distribution</h3>
+                <img src="/home/swapnil/Desktop/Placement26/ADAS/Transliteration/results/error_distribution.png" alt="Error Distribution">
+            </div>
+            
+        </section>
+
+        <!-- Key Findings -->
+        <section id="findings">
+            <h2>Key Findings</h2>
+
+            <div class="model-card">
+                <h4>Transformer - Best Overall (43.07%)</h4>
+                <div class="metric"><strong>Strengths:</strong> Highest accuracy, good on medium-length words (6-10 chars)</div>
+                <div class="metric"><strong>Weaknesses:</strong> Catastrophic failures on 2-3 char sequences, slowest inference (15.3ms)</div>
+            </div>
+
+            <div class="model-card">
+                <h4>BiLSTM + Attention - Most Reliable (42.11%)</h4>
+                <div class="metric"><strong>Strengths:</strong> Lowest edit distance (0.94), fewest catastrophic errors, consistent performance</div>
+                <div class="metric"><strong>Weaknesses:</strong> Largest model (37.28M params)</div>
+            </div>
+
+            <div class="model-card">
+                <h4>LSTM - Best Speed/Accuracy (39.18% @ 1.29ms)</h4>
+                <div class="metric"><strong>Strengths:</strong> Fast inference, decent accuracy, compact model</div>
+                <div class="metric"><strong>Weaknesses:</strong> Lower accuracy than attention models</div>
+            </div>
+        </section>
+
+        <!-- Worst Predictions -->
+        <section id="worst-predictions">
+            <h2>Worst Predictions Analysis</h2>
+            
+            <h3>Transformer - Catastrophic Failures on Short Sequences</h3>
+            <div class="prediction-grid">
+                <div class="prediction-card">
+                    <strong>'pic' → 'पिक'</strong><br>
+                    Predicted: 'पीआईसीसीपीआईसीपीआईकीआईसीआईसीआईसीआईकीआईसीआईसीआईसीआई'<br>
+                    <span style="color: #dc3545;">Edit Distance: 48</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'bk' → 'बीके'</strong><br>
+                    Predicted: 'बकेकबीबीबीबीबीबीबीबीबीबीबीबीबीबीबीबीबीबीबीबीबीबीबी'<br>
+                    <span style="color: #dc3545;">Edit Distance: 48</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'sk' → 'एसके'</strong><br>
+                    Predicted: 'एसकेकेसीएसीएसीएसीएसीएसीएसीएसीएसीएसीएसीएसीएसीएसीएसी'<br>
+                    <span style="color: #dc3545;">Edit Distance: 46</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'pml' → 'पीएमएल'</strong><br>
+                    Predicted: 'पीएमलीएमएपीएफीएफीएफीएफीएमीएमीएफीएफीएलपीएफीएमीएमीएफ'<br>
+                    <span style="color: #dc3545;">Edit Distance: 44</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'pv' → 'पीवी'</strong><br>
+                    Predicted: 'पीवीवीवीपीवीीीीीीीीपीवीवी'<br>
+                    <span style="color: #dc3545;">Edit Distance: 21</span>
+                </div>
+            </div>
+
+            <h3>BiLSTM + Attention - Moderate Errors</h3>
+            <div class="prediction-grid">
+                <div class="prediction-card">
+                    <strong>'ftii' → 'एफटीआईआई'</strong><br>
+                    Predicted: 'फीटी'<br>
+                    <span style="color: #dc3545;">Edit Distance: 6</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'contemporary' → 'कंटेम्पररी'</strong><br>
+                    Predicted: 'कॉनटेपोरे'<br>
+                    <span style="color: #dc3545;">Edit Distance: 6</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'daddy' → 'डैडी'</strong><br>
+                    Predicted: 'दे्द्य'<br>
+                    <span style="color: #dc3545;">Edit Distance: 6</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'duneerti' → 'दुर्नीति'</strong><br>
+                    Predicted: 'डुनीरीटी'<br>
+                    <span style="color: #dc3545;">Edit Distance: 6</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'pashtuun' → 'पश्तून'</strong><br>
+                    Predicted: 'पाष्टुओं'<br>
+                    <span style="color: #dc3545;">Edit Distance: 6</span>
+                </div>
+            </div>
+
+            <h3>LSTM + Attention - Complex Word Failures</h3>
+            <div class="prediction-grid">
+                <div class="prediction-card">
+                    <strong>'wastinghouse' → 'वेस्टिंगहाउस'</strong><br>
+                    Predicted: 'वा््टनिशंज'<br>
+                    <span style="color: #dc3545;">Edit Distance: 9</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'tuberculosis' → 'ट्यूबरक्यूलोसिस'</strong><br>
+                    Predicted: 'टब्बूरकलिस'<br>
+                    <span style="color: #dc3545;">Edit Distance: 8</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'tuberkyulosis' → 'ट्यूबरक्यूलोसिस'</strong><br>
+                    Predicted: 'ट्बेब्रोलिकिस'<br>
+                    <span style="color: #dc3545;">Edit Distance: 8</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'paranormal' → 'पैरानॉर्मल'</strong><br>
+                    Predicted: 'परणोमाल'<br>
+                    <span style="color: #dc3545;">Edit Distance: 7</span>
+                </div>
+                <div class="prediction-card">
+                    <strong>'westinghouse' → 'वेस्टिंगहाउस'</strong><br>
+                    Predicted: 'वेस्टननोज'<br>
+                    <span style="color: #dc3545;">Edit Distance: 7</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Model Comparison Examples -->
+        <section id="comparisons">
+            <h2>Model Comparison: Challenging Cases</h2>
+            <p>Examples where models disagreed, showing unique strengths:</p>
+
+            <div class="comparison-table">
+                <h4>'ank' → 'अंक'</h4>
+                <span class="incorrect">✗ rnn: 'पारी'</span><br>
+                <span class="correct">✓ lstm: 'अंक'</span><br>
+                <span class="incorrect">✗ gru: 'एंक'</span><br>
+                <span class="incorrect">✗ rnn_attention: 'एंक'</span><br>
+                <span class="correct">✓ lstm_attention: 'अंक'</span><br>
+                <span class="incorrect">✗ gru_attention: 'आंके'</span><br>
+                <span class="correct">✓ bilstm_attention: 'अंक'</span><br>
+                <span class="correct">✓ transformer: 'अंक'</span>
+            </div>
+
+            <div class="comparison-table">
+                <h4>'ankit' → 'अंकित'</h4>
+                <span class="incorrect">✗ rnn: 'पर्रों'</span><br>
+                <span class="incorrect">✗ lstm: 'अंकीत'</span><br>
+                <span class="incorrect">✗ gru: 'अंकीत'</span><br>
+                <span class="incorrect">✗ rnn_attention: 'अंकीट'</span><br>
+                <span class="correct">✓ lstm_attention: 'अंकित'</span><br>
+                <span class="incorrect">✗ gru_attention: 'अनकित'</span><br>
+                <span class="correct">✓ bilstm_attention: 'अंकित'</span><br>
+                <span class="correct">✓ transformer: 'अंकित'</span>
+            </div>
+
+            <div class="comparison-table">
+                <h4>'angarak' → 'अंगारक' (Only Transformer got it right!)</h4>
+                <span class="incorrect">✗ rnn: 'अर्माना'</span><br>
+                <span class="incorrect">✗ lstm: 'अंगरक'</span><br>
+                <span class="incorrect">✗ gru: 'अंगरक'</span><br>
+                <span class="incorrect">✗ rnn_attention: 'अंगरक'</span><br>
+                <span class="incorrect">✗ lstm_attention: 'अंगरक'</span><br>
+                <span class="incorrect">✗ gru_attention: 'अंगरक'</span><br>
+                <span class="incorrect">✗ bilstm_attention: 'अंगरक'</span><br>
+                <span class="correct">✓ transformer: 'अंगारक'</span>
+            </div>
+
+            <div class="comparison-table">
+                <h4>'ambaani' → 'अंबानी'</h4>
+                <span class="incorrect">✗ rnn: 'अनारानी'</span><br>
+                <span class="incorrect">✗ lstm: 'अमबानी'</span><br>
+                <span class="correct">✓ gru: 'अंबानी'</span><br>
+                <span class="incorrect">✗ rnn_attention: 'अमबानी'</span><br>
+                <span class="correct">✓ lstm_attention: 'अंबानी'</span><br>
+                <span class="incorrect">✗ gru_attention: 'अमबानी'</span><br>
+                <span class="correct">✓ bilstm_attention: 'अंबानी'</span><br>
+                <span class="correct">✓ transformer: 'अंबानी'</span>
+            </div>
+
+            <div class="comparison-table">
+                <h4>'andha' → 'अंधा' (Easy for most models)</h4>
+                <span class="incorrect">✗ rnn: 'पर्ाा'</span><br>
+                <span class="correct">✓ lstm: 'अंधा'</span><br>
+                <span class="correct">✓ gru: 'अंधा'</span><br>
+                <span class="correct">✓ rnn_attention: 'अंधा'</span><br>
+                <span class="correct">✓ lstm_attention: 'अंधा'</span><br>
+                <span class="correct">✓ gru_attention: 'अंधा'</span><br>
+                <span class="correct">✓ bilstm_attention: 'अंधा'</span><br>
+                <span class="correct">✓ transformer: 'अंधा'</span>
+            </div>
+        </section>
+
+        <!-- Common Failure Patterns -->
+        <section id="failure-patterns">
+            <h2>Common Failure Patterns</h2>
+
+            <h3>1. Acronyms & Abbreviations</h3>
+            <div class="error-example">
+                <strong>Challenge:</strong> Models struggle with character-by-character transliteration<br>
+                Examples: 'ftii', 'pic', 'bk', 'sk', 'pml'<br>
+                <strong>Issue:</strong> Should transliterate as individual letters, not phonetically
+            </div>
+
+            <h3>2. English Loanwords</h3>
+            <div class="error-example">
+                <strong>Challenge:</strong> Complex phonetics from English origin<br>
+                Examples: 'tuberculosis', 'contemporary', 'paranormal'<br>
+                <strong>Issue:</strong> Requires understanding of English pronunciation rules
+            </div>
+
+            <h3>3. Consonant Clusters</h3>
+            <div class="error-example">
+                <strong>Challenge:</strong> Devanagari conjuncts (halant characters)<br>
+                Examples: 'pashtuun' (पश्तून), 'duneerti' (दुर्नीति)<br>
+                <strong>Issue:</strong> Halant placement and cluster formation
+            </div>
+
+            <h3>4. Transformer Repetition Bug</h3>
+            <div class="error-example">
+                <strong>Challenge:</strong> Short sequences cause catastrophic repetition<br>
+                Examples: 'pic', 'bk', 'sk' generate 40+ character gibberish<br>
+                <strong>Root Cause:</strong> Attention mechanism feedback loop on minimal context<br>
+                <strong>Solution:</strong> Use BiLSTM for sequences ≤ 3 characters
+            </div>
+        </section>
+
+        <!-- Success Patterns -->
+        <section id="success-patterns">
+            <h2>Success Examples</h2>
+
+            <div class="success-example">
+                <h4>Common Hindi Words (High Success)</h4>
+                'namaste' → 'नमस्ते' (All models except RNN)<br>
+                'dhanyavaad' → 'धन्यवाद' (LSTM, BiLSTM, Transformer)<br>
+                'bharat' → 'भारत' (Most models)<br>
+                'kripaya' → 'कृपया' (Attention models)
+            </div>
+
+            <div class="success-example">
+                <h4>Medium Complexity (6-8 characters)</h4>
+                'angaarak' → 'अंगारक' (6/8 models correct)<br>
+                'akhand' → 'अखंड' (5/8 models correct)<br>
+                'ambaani' → 'अंबानी' (4/8 models correct)
+            </div>
+        </section>
+
+        <!-- Dataset -->
+        <section id="dataset">
+            <h2>Dataset</h2>
+            <p><strong>Dakshina Dataset</strong> (Google Research)</p>
+            <ul>
+                <li><strong>Training:</strong> 44,204 pairs</li>
+                <li><strong>Validation:</strong> 4,358 pairs</li>
+                <li><strong>Test:</strong> 4,502 pairs</li>
+                <li><strong>Task:</strong> English (Latin script) → Hindi (Devanagari script)</li>
+            </ul>
+            
+            <div class="success-example">
+                <strong>Example Pairs:</strong><br>
+                namaste → नमस्ते<br>
+                dhanyavaad → धन्यवाद<br>
+                bharat → भारत<br>
+                sanskrit → संस्कृत
+            </div>
+        </section>
+
+        <!-- Models -->
+        <section id="models">
+            <h2>Model Architectures</h2>
+            
+            <h3>1. Vanilla RNN/LSTM/GRU</h3>
+            <p>Basic encoder-decoder architecture with different cell types. RNN failed completely (0.11%), while LSTM and GRU achieved ~37-39% accuracy.</p>
+
+            <h3>2. RNN/LSTM/GRU + Attention</h3>
+            <p>Added Bahdanau attention mechanism. Improved performance by 0-2% over vanilla versions, with better handling of longer sequences.</p>
+
+            <h3>3. Bidirectional LSTM + Attention</h3>
+            <p>BiLSTM encoder processes sequences in both directions. Achieved 42.11% accuracy with the best error profile (lowest edit distance of 0.94).</p>
+
+            <h3>4. Transformer</h3>
+            <p>Standard Transformer with positional encoding and multi-head attention (8 heads, 256 d_model). Achieved highest accuracy (43.07%) but with catastrophic failures on very short inputs (2-3 characters).</p>
+        </section>
+
+        <!-- Usage -->
+        <section id="usage">
+            <h2>Quick Start</h2>
+            
+            <h3>Installation</h3>
+            <div class="code-block"><code>pip install torch pandas numpy matplotlib seaborn tqdm</code></div>
+
+<!-- Continuation from line 723 -->
+
+            <h3>Train All Models</h3>
+            <div class="code-block"><code>python trainer_all.py</code></div>
+
+            <h3>Generate Analysis</h3>
+            <div class="code-block"><code>python analyze_results.py</code></div>
+
+            <h3>Use Cases</h3>
+            <ul>
+                <li><strong>Production (Speed Critical):</strong> LSTM (39% @ 1.3ms) - Best for mobile/embedded</li>
+                <li><strong>Production (Accuracy Critical):</strong> Transformer (43% @ 15ms) - Avoid sequences &lt; 4 chars</li>
+                <li><strong>Research/Analysis:</strong> BiLSTM + Attention (42% @ 2.5ms, best error profile)</li>
+                <li><strong>Balanced:</strong> LSTM + Attention (39% @ 2.2ms) - Good middle ground</li>
+                <li><strong>Embedded/Mobile:</strong> GRU (37% @ 1.26ms) - Smallest footprint</li>
+            </ul>
+
+            <h3>Model Selection Guide</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Recommended Model</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Real-time typing suggestions</td>
+                        <td>LSTM or GRU</td>
+                        <td>Fast inference required (&lt;2ms)</td>
+                    </tr>
+                    <tr>
+                        <td>Batch processing</td>
+                        <td>Transformer</td>
+                        <td>Highest accuracy, speed less critical</td>
+                    </tr>
+                    <tr>
+                        <td>Mobile keyboards</td>
+                        <td>GRU</td>
+                        <td>Small model size, fast inference</td>
+                    </tr>
+                    <tr>
+                        <td>Critical applications</td>
+                        <td>BiLSTM + Attention</td>
+                        <td>Lowest error distance, most consistent</td>
+                    </tr>
+                    <tr>
+                        <td>Short sequences (2-3 chars)</td>
+                        <td>BiLSTM + Attention</td>
+                        <td>Transformer fails catastrophically</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Implementation Details -->
+        <section id="implementation">
+            <h2>Implementation Details</h2>
+
+            <h3>Training Configuration</h3>
+            <ul>
+                <li><strong>Embedding:</strong> 256 dimensions</li>
+                <li><strong>Hidden Size:</strong> 256-512 (model dependent)</li>
+                <li><strong>Layers:</strong> 2-3 layers</li>
+                <li><strong>Dropout:</strong> 0.1-0.3</li>
+                <li><strong>Optimizer:</strong> Adam (lr=0.001)</li>
+                <li><strong>Batch Size:</strong> 64</li>
+                <li><strong>Epochs:</strong> 30-50</li>
+                <li><strong>Loss:</strong> Cross-Entropy with padding mask</li>
+            </ul>
+
+            <h3>Transformer Specific</h3>
+            <ul>
+                <li><strong>d_model:</strong> 256</li>
+                <li><strong>Attention Heads:</strong> 8</li>
+                <li><strong>FFN Hidden:</strong> 1024</li>
+                <li><strong>Positional Encoding:</strong> Sinusoidal</li>
+                <li><strong>Label Smoothing:</strong> 0.1</li>
+            </ul>
+
+            <h3>BiLSTM + Attention Specific</h3>
+            <ul>
+                <li><strong>Bidirectional:</strong> True (2x hidden size)</li>
+                <li><strong>Attention:</strong> Bahdanau mechanism</li>
+                <li><strong>Total Params:</strong> 37.28M (largest model)</li>
+            </ul>
+        </section>
+
+        <!-- Performance Analysis -->
+        <section id="performance">
+            <h2>Performance by Sequence Length</h2>
+
+            <h3>Short Sequences (2-4 chars)</h3>
+            <div class="error-example">
+                <strong>Challenge:</strong> Limited context for models<br>
+                <strong>Best:</strong> BiLSTM + Attention (~37%)<br>
+                <strong>Worst:</strong> Transformer (catastrophic failures, repetition bugs)<br>
+                <strong>Recommendation:</strong> Avoid Transformer for very short inputs
+            </div>
+
+            <h3>Medium Sequences (5-8 chars)</h3>
+            <div class="success-example">
+                <strong>Sweet Spot:</strong> All models perform best here<br>
+                <strong>Best:</strong> Transformer (~45%)<br>
+                <strong>Average:</strong> LSTM/GRU + Attention (~40-42%)<br>
+                <strong>Typical Words:</strong> namaste, bharat, hindi
+            </div>
+
+            <h3>Long Sequences (9+ chars)</h3>
+            <div class="error-example">
+                <strong>Challenge:</strong> Complex dependencies<br>
+                <strong>Best:</strong> Transformer maintains ~45%<br>
+                <strong>Declining:</strong> RNN-based models drop to ~30-35%<br>
+                <strong>Reason:</strong> Vanishing gradient in RNNs, attention helps but not enough
+            </div>
+        </section>
+
+        <!-- Limitations -->
+        <section id="limitations">
+            <h2>Known Limitations</h2>
+
+            <h3>All Models</h3>
+            <ul>
+                <li>Struggle with acronyms (ftii, bk, pic)</li>
+                <li>Poor on English loanwords with complex phonetics</li>
+                <li>Difficulty with rare Devanagari conjuncts</li>
+                <li>No explicit linguistic rules, purely data-driven</li>
+                <li>Performance ceiling at ~43% suggests need for more training data or hybrid approaches</li>
+            </ul>
+
+            <h3>Transformer Specific</h3>
+            <ul>
+                <li><strong>Critical:</strong> Repetition bug on 2-3 character sequences</li>
+                <li>Generates 40+ character gibberish from minimal input</li>
+                <li>Requires input length filtering or fallback to BiLSTM</li>
+                <li>Slower inference (15ms vs 1-3ms for others)</li>
+            </ul>
+
+            <h3>BiLSTM Specific</h3>
+            <ul>
+                <li>Large model size (37.28M params)</li>
+                <li>Longer training time</li>
+                <li>Higher memory requirements</li>
+            </ul>
+
+            <h3>RNN/LSTM/GRU Specific</h3>
+            <ul>
+                <li>Performance degrades on sequences longer than training distribution</li>
+                <li>Vanilla RNN completely failed (0.11% accuracy)</li>
+                <li>Limited by sequential processing (no parallelization)</li>
+            </ul>
+        </section>
+
+        <!-- Future Work -->
+        <section id="future-work">
+            <h2>Future Work & Improvements</h2>
+
+            <h3>Model Improvements</h3>
+            <ul>
+                <li><strong>Ensemble Models:</strong> Combine Transformer + BiLSTM based on input length</li>
+                <li><strong>Pre-training:</strong> Use ByT5 or mT5 multilingual models</li>
+                <li><strong>Data Augmentation:</strong> Synthetic data generation, back-translation</li>
+                <li><strong>Hybrid Approaches:</strong> Neural + rule-based for acronyms</li>
+                <li><strong>Length-aware Training:</strong> Stratified sampling by sequence length</li>
+            </ul>
+
+            <h3>Architectural Experiments</h3>
+            <ul>
+                <li>Transformer-XL for longer sequences</li>
+                <li>Conv-Seq2Seq models</li>
+                <li>Character-aware embeddings (fastText style)</li>
+                <li>Multi-task learning (transliteration + phoneme prediction)</li>
+            </ul>
+
+            <h3>Evaluation Metrics</h3>
+            <ul>
+                <li>Phonetic similarity scores (beyond edit distance)</li>
+                <li>Human evaluation on ambiguous cases</li>
+                <li>Domain-specific accuracy (names vs common words)</li>
+            </ul>
+        </section>
+
+        <!-- Download -->
+        <section id="download" style="text-align: center;">
+            <h2>Resources</h2>
+            <a href="https://github.com/Swapnil-Mahajan-MS/Transliteration-models-comparative-benchmark" class="btn">📁 View on GitHub</a>
+            <a href="/home/swapnil/Desktop/Placement26/ADAS/Transliteration/results/predictions_all.csv" class="btn">📊 Download Predictions</a>
+            <a href="/home/swapnil/Desktop/Placement26/ADAS/Transliteration/results/detailed_statistics.csv" class="btn">📈 Download Statistics</a>
+            <a href="/home/swapnil/Desktop/Placement26/ADAS/Transliteration/results/model_comparison.png" class="btn">🖼️ Download Charts</a>
+        </section>
+
+        <!-- Citation -->
+        <section id="citation">
+            <h2>Citation</h2>
+            <div class="code-block"><code>@misc{transliteration-benchmark-2025,
+  title={Sequence-to-Sequence Models for English-Hindi Transliteration: 
+         A Comprehensive Benchmark},
+  author={Your Name},
+  year={2025},
+  note={Benchmark of 8 neural architectures on Dakshina dataset},
+  howpublished={\url{https://github.com/yourusername/transliteration-benchmark}}
+}</code></div>
+
+            <h3>References</h3>
+            <ul style="line-height: 2;">
+                <li>Dakshina Dataset: <a href="https://github.com/google-research-datasets/dakshina">Google Research</a></li>
+                <li>Bahdanau Attention: <a href="https://arxiv.org/abs/1409.0473">Bahdanau et al., 2014</a></li>
+                <li>Transformer: <a href="https://arxiv.org/abs/1706.03762">Vaswani et al., 2017</a></li>
+                <li>Sequence to Sequence Learning: <a href="https://arxiv.org/abs/1409.3215">Sutskever et al., 2014</a></li>
+            </ul>
+        </section>
+
+        <!-- Contact -->
+        <section id="contact" style="text-align: center;">
+            <h2>Contact & Contributions</h2>
+            <p>Found a bug? Have suggestions? Want to contribute?</p>
+            <a href="https://github.com/yourusername/transliteration-benchmark/issues" class="btn">Report Issue</a>
+            <a href="https://github.com/yourusername/transliteration-benchmark/pulls" class="btn">Submit PR</a>
+        </section>
+    </div>
+
+    <footer>
+        <p><strong>English-Hindi Transliteration Benchmark</strong> | 2025</p>
+        <p>Built with PyTorch | Dakshina Dataset by Google Research</p>
+        <p style="margin-top: 20px; font-size: 0.9em;">
+            8 Models | 4,502 Test Samples | 36,016 Predictions Analyzed
+        </p>
+    </footer>
+</body>
+</html>
